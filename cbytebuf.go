@@ -2,7 +2,7 @@ package cbytebuf
 
 /*
 #include "stdlib.h"
-#include "export.h"
+#include "cbytebuf.h"
 */
 import "C"
 import (
@@ -11,42 +11,56 @@ import (
 )
 
 type CByteBuf struct {
-	cp *C.CByteBuf
 	sh reflect.SliceHeader
-	a  int
+	b  []byte
 	l  int
-	c  int
 }
 
-// Init new instance of ByteBuf.
 func NewCByteBuf() (*CByteBuf, error) {
-	cbb := C.cbb_new()
-	bb := CByteBuf{
-		cp: (*C.CByteBuf)(unsafe.Pointer(cbb)),
-	}
-	return &bb, nil
+	b := CByteBuf{}
+	return &b, nil
 }
 
 func (b *CByteBuf) Write(data []byte) (int, error) {
-	ptrData := (*C.uchar)(unsafe.Pointer(&data[0]))
 	b.l = len(data)
-	ptrLen := (*C.int)(unsafe.Pointer(&b.l))
-	C.cbb_write(b.cp, ptrData, ptrLen)
-	return len(data), nil
+	if b.b == nil {
+		b.sh.Cap = b.l * 2
+		ptrAddr := (*C.uintptr)(unsafe.Pointer(&b.sh.Data))
+		ptrCap := (*C.int)(unsafe.Pointer(&b.sh.Cap))
+		C.cbb_init(ptrAddr, ptrCap)
+		b.b = *(*[]byte)(unsafe.Pointer(&b.sh))
+	}
+
+	if b.sh.Len+b.l > b.sh.Cap {
+		_ = b.Grow((b.sh.Len + b.l) * 2)
+	}
+
+	b.b = append(b.b, data...)
+	b.sh.Len += b.l
+
+	return b.l, nil
+}
+
+func (b *CByteBuf) Grow(cap int) error {
+	b.sh.Cap = cap
+	ptrAddr := (*C.uintptr)(unsafe.Pointer(&b.sh.Data))
+	ptrCap := (*C.int)(unsafe.Pointer(&b.sh.Cap))
+	C.cbb_grow(ptrAddr, ptrCap)
+	b.b = *(*[]byte)(unsafe.Pointer(&b.sh))
+	return nil
 }
 
 func (b *CByteBuf) Bytes() []byte {
-	ptrAddr := (*C.uintptr)(unsafe.Pointer(&b.a))
-	ptrLen := (*C.int)(unsafe.Pointer(&b.l))
-	ptrCap := (*C.int)(unsafe.Pointer(&b.c))
-	C.cbb_bytes(b.cp, ptrAddr, ptrLen, ptrCap)
-
-	b.sh.Data = uintptr(b.a)
-	b.sh.Len = b.l
-	b.sh.Cap = b.c
-	return *(*[]byte)(unsafe.Pointer(&b.sh))
+	return b.b
 }
 
 func (b *CByteBuf) Reset() {
-	C.cbb_release(b.cp)
+	b.b = b.b[:0]
+}
+
+func (b *CByteBuf) Release() {
+	ptrAddr := (*C.uintptr)(unsafe.Pointer(&b.sh.Data))
+	C.cbb_release(ptrAddr)
+	b.sh.Len, b.sh.Cap = 0, 0
+	b.b = nil
 }

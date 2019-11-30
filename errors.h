@@ -1,7 +1,0 @@
-#ifndef CBYTEBUF_ERRORS_H
-#define CBYTEBUF_ERRORS_H
-
-#define ERR_OK 0
-#define ERR_ALLOC 1
-
-#endif //CBYTEBUF_ERRORS_H

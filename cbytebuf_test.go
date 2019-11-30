@@ -15,9 +15,9 @@ var (
 		"tincidunt purus. Integer sit amet porta mauris. Curabitur eu est sed augue rutrum tristique et a augue. " +
 		"Proin dictum cursus quam vel varius. Duis viverra massa sed lacus gravida, a ullamcorper ipsum iaculis. " +
 		"Maecenas interdum congue neque, in ultricies erat ornare id. Suspendisse vitae imperdiet eros.")
-	space = []byte(" ")
+	space    = []byte(" ")
 	expected = append(source, space...)
-	parts = bytes.Split(source, space)
+	parts    = bytes.Split(source, space)
 )
 
 func TestCByteBuf(t *testing.T) {
@@ -25,7 +25,7 @@ func TestCByteBuf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer buf.Reset()
+	defer buf.Release()
 
 	for _, part := range parts {
 		_, _ = buf.Write(part)
@@ -39,7 +39,7 @@ func TestCByteBuf(t *testing.T) {
 
 func BenchmarkCByteBuf(b *testing.B) {
 	b.ReportAllocs()
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		buf, _ := NewCByteBuf()
 		for _, part := range parts {
 			_, _ = buf.Write(part)
@@ -54,7 +54,7 @@ func BenchmarkCByteBuf(b *testing.B) {
 
 func BenchmarkAppend(b *testing.B) {
 	b.ReportAllocs()
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0)
 		for _, part := range parts {
 			buf = append(buf, part...)
@@ -68,7 +68,7 @@ func BenchmarkAppend(b *testing.B) {
 
 func BenchmarkByteBufferNative(b *testing.B) {
 	b.ReportAllocs()
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		var buf bytes.Buffer
 		for _, part := range parts {
 			buf.Write(part)
@@ -83,7 +83,7 @@ func BenchmarkByteBufferNative(b *testing.B) {
 
 func BenchmarkByteBufferValyala(b *testing.B) {
 	b.ReportAllocs()
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		var buf bytebufferpool.ByteBuffer
 		for _, part := range parts {
 			_, _ = buf.Write(part)
