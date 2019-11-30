@@ -31,7 +31,7 @@ func TestCByteBuf(t *testing.T) {
 
 	for _, part := range parts {
 		_, _ = buf.Write(part)
-		_, _ = buf.Write(space)
+		_ = buf.WriteByte(' ')
 	}
 	b := buf.Bytes()
 	if !bytes.Equal(b, expected) {
