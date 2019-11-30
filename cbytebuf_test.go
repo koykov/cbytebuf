@@ -25,7 +25,9 @@ func TestCByteBuf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer buf.Release()
+	defer func() {
+		_ = buf.Release()
+	}()
 
 	for _, part := range parts {
 		_, _ = buf.Write(part)
@@ -48,7 +50,7 @@ func BenchmarkCByteBuf(b *testing.B) {
 		if !bytes.Equal(buf.Bytes(), expected) {
 			b.Error("not equal")
 		}
-		buf.Reset()
+		_ = buf.Release()
 	}
 }
 
