@@ -14,22 +14,25 @@ import (
 )
 
 const (
-	errOk          = 0
-	errBadAlloc    = 1
-	errNegativeCap = 2
+	errOk           = 0
+	errBadAlloc     = 1
+	errNegativeCap  = 2
+	errNegativeRead = 3
 )
 
+// Variable-size alloc-free buffer.
 type CByteBuf struct {
-	sh reflect.SliceHeader
-	b  []byte
-	l  int
-	e  uint
+	sh reflect.SliceHeader // header to fast slice construct
+	b  []byte              // buffer slice
+	l  int                 // temporary int var
+	e  uint                // error code
 }
 
 var errs = []error{
-	errOk:          nil,
-	errBadAlloc:    errors.New("bad alloc on buffer init or grow"),
-	errNegativeCap: errors.New("negative cap on the grow"),
+	errOk:           nil,
+	errBadAlloc:     errors.New("bad alloc on buffer init or grow"),
+	errNegativeCap:  errors.New("negative cap on the grow"),
+	errNegativeRead: errors.New("reader returned negative count from Read"),
 }
 
 func NewCByteBuf() (*CByteBuf, error) {
@@ -40,6 +43,39 @@ func NewCByteBuf() (*CByteBuf, error) {
 // Get length of the buffer.
 func (b *CByteBuf) Len() int {
 	return b.sh.Len
+}
+
+// Get capacity of the buffer.
+func (b *CByteBuf) Cap() int {
+	return b.sh.Cap
+}
+
+// Implement io.ReaderFrom.
+func (b *CByteBuf) ReadFrom(r io.Reader) (n int64, err error) {
+	if b.sh.Cap == 0 {
+		if err = b.Grow(64); err != nil {
+			return 0, err
+		}
+	}
+	for {
+		if b.sh.Len == b.sh.Cap {
+			if err = b.Grow(b.sh.Cap * 2); err != nil {
+				return 0, err
+			}
+		}
+		b.l, err = r.Read(b.b[b.sh.Len:])
+		if b.l < 0 {
+			return n, errs[errNegativeRead]
+		}
+		b.sh.Len += b.l
+		n += int64(b.l)
+		if err == io.EOF {
+			return n, nil
+		}
+		if err != nil {
+			return n, err
+		}
+	}
 }
 
 // Implement io.WriterTo.
@@ -59,13 +95,19 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 		ptrCap := (*C.int)(unsafe.Pointer(&b.sh.Cap))
 		// Create underlying byte array in the C memory, outside of GC's eyes.
 		C.cbb_init(ptrErr, ptrAddr, ptrCap)
+		if b.e != 0 {
+			return 0, errs[b.e]
+		}
 		// Manually create the byte slice.
 		b.b = *(*[]byte)(unsafe.Pointer(&b.sh))
 	}
 
 	if b.sh.Len+b.l > b.sh.Cap {
 		// Increase capacity of the byte array due to not enough space in it.
-		_ = b.Grow((b.sh.Len + b.l) * 2)
+		err := b.Grow((b.sh.Len + b.l) * 2)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	// Add data to the slice.
@@ -88,7 +130,7 @@ func (b *CByteBuf) WriteByte(c byte) error {
 //
 // String will be convert to byte slice on the fly.
 func (b *CByteBuf) WriteString(s string) (int, error) {
-	return b.Write(fastconv.StringToBytes(s))
+	return b.Write(fastconv.S2B(s))
 }
 
 // Increase or decrease capacity of the buffer.
@@ -110,6 +152,13 @@ func (b *CByteBuf) Grow(cap int) error {
 	return errs[b.e]
 }
 
+// Increase or decrease capacity of the buffer using delta value.
+//
+// Delta may be negative, but if delta will less than -capacity, the error will be triggered.
+func (b *CByteBuf) GrowDelta(delta int) error {
+	return b.Grow(b.sh.Cap + delta)
+}
+
 // Get the contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
 	return b.b
@@ -117,7 +166,7 @@ func (b *CByteBuf) Bytes() []byte {
 
 // Get the contents of the buffer as string.
 func (b *CByteBuf) String() string {
-	return fastconv.BytesToString(b.b)
+	return fastconv.B2S(b.b)
 }
 
 // Reset all data accumulated in buffer.
