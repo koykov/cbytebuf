@@ -1,21 +1,21 @@
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 #include "cbytebuf.h"
 
 void cbb_init(error *err, uintptr *addr, const int *cap) {
-    *addr = (byte*) realloc(nullptr, *cap);
-    *err = *addr == nullptr ? ERR_BAD_ALLOC : ERR_OK;
+    *addr = (byte*) realloc(NULL, *cap);
+    *err = *addr == NULL ? ERR_BAD_ALLOC : ERR_OK;
 }
 
 void cbb_grow(error *err, uintptr *addr, const int *cap) {
     *addr = (byte*) realloc(*addr, *cap);
-    *err = *addr == nullptr ? ERR_BAD_ALLOC : ERR_OK;
+    *err = *addr == NULL ? ERR_BAD_ALLOC : ERR_OK;
 }
 
 void cbb_release(error *err, uintptr *addr) {
-    if (*addr != nullptr) {
+    if (*addr != NULL) {
         free(*addr);
-        *addr = nullptr;
+        *addr = NULL;
     }
     *err = ERR_OK;
 }

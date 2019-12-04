@@ -1,7 +1,6 @@
 package cbytebuf
 
 /*
-#include "stdlib.h"
 #include "cbytebuf.h"
 */
 import "C"

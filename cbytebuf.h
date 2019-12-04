@@ -25,7 +25,7 @@ extern "C" {
  */
 typedef void* uintptr;
 typedef uint8_t byte;
-typedef uint error;
+typedef unsigned int error;
 
 /**
  * Initialize byte array with given capacity.
