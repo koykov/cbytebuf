@@ -171,6 +171,7 @@ func (b *CByteBuf) String() string {
 // Reset all data accumulated in buffer.
 func (b *CByteBuf) Reset() {
 	b.b = b.b[:0]
+	b.sh.Len = 0
 }
 
 // Manually release of the underlying byte array.
