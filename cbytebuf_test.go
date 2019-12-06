@@ -2,7 +2,6 @@ package cbytebuf
 
 import (
 	"bytes"
-	"github.com/valyala/bytebufferpool"
 	"testing"
 )
 
@@ -75,21 +74,6 @@ func BenchmarkByteBufferNative(b *testing.B) {
 		for _, part := range parts {
 			buf.Write(part)
 			buf.WriteByte(' ')
-		}
-		if !bytes.Equal(buf.Bytes(), expected) {
-			b.Error("not equal")
-		}
-		buf.Reset()
-	}
-}
-
-func BenchmarkByteBufferValyala(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var buf bytebufferpool.ByteBuffer
-		for _, part := range parts {
-			_, _ = buf.Write(part)
-			_ = buf.WriteByte(' ')
 		}
 		if !bytes.Equal(buf.Bytes(), expected) {
 			b.Error("not equal")
