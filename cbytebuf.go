@@ -137,6 +137,9 @@ func (b *CByteBuf) Grow(cap int) error {
 	if cap < 0 {
 		return errs[errNegativeCap]
 	}
+	if b.b != nil && b.h.Cap >= cap {
+		return errs[errOk]
+	}
 	// Save new capacity.
 	b.h.Cap = cap
 	ptrErr := (*C.uint)(unsafe.Pointer(&b.e))
