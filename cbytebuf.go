@@ -90,9 +90,10 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 		// First write, need to create internal byte slice.
 		b.h.Cap = b.l * 2
 		// Create underlying byte array in the C memory, outside of GC's eyes.
-		C.cbb_init((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
-		if b.e != 0 {
-			return 0, errs[b.e]
+		//C.cbb_init((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
+		b.h.Data = uintptr(C.cbb_init_np(C.int(b.h.Cap)))
+		if b.h.Data == 0 {
+			return 0, errs[errBadAlloc]
 		}
 		// Manually create the byte slice.
 		b.b = *(*[]byte)(unsafe.Pointer(&b.h))
@@ -111,7 +112,7 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 	// Increase internal len for further grows.
 	b.h.Len += b.l
 
-	return b.l, errs[b.e]
+	return b.l, errs[errOk]
 }
 
 // Write single byte in the buffer.
@@ -142,10 +143,14 @@ func (b *CByteBuf) Grow(cap int) error {
 	// Reallocate underlying byte array in C memory.
 	// New array may overlap with the previous if it's possible to resize it (there is free space at the right side).
 	// All necessary copying/free will perform implicitly, don't worry about this.
-	C.cbb_grow((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
+	//C.cbb_grow((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
+	b.h.Data = uintptr(C.cbb_grow_np(unsafe.Pointer(b.h.Data), C.int(b.h.Cap)))
+	if b.h.Data == 0 {
+		return errs[errBadAlloc]
+	}
 	// Recreate the slice (old accumulated data keeps).
 	b.b = *(*[]byte)(unsafe.Pointer(&b.h))
-	return errs[b.e]
+	return errs[errOk]
 }
 
 // Increase or decrease capacity of the buffer using delta value.
@@ -176,8 +181,10 @@ func (b *CByteBuf) Reset() {
 // Using the buffer data after call this func may crash your app.
 func (b *CByteBuf) Release() error {
 	// Free memory.
-	C.cbb_release((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)))
+	//C.cbb_release((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)))
+	C.cbb_release_np(unsafe.Pointer(b.h.Data))
 	// Truncate length and capacity.
+	b.h.Data = 0
 	b.h.Len, b.h.Cap = 0, 0
 	// Slice is broken here, therefore kill it.
 	b.b = nil
