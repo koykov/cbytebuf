@@ -3,7 +3,7 @@
 #include "cbytebuf.h"
 
 void cbb_init(error *err, uintptr *addr, const int *cap) {
-    *addr = (byte*) realloc(NULL, *cap);
+    *addr = (byte*) malloc(*cap);
     *err = *addr == NULL ? ERR_BAD_ALLOC : ERR_OK;
 }
 
