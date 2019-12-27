@@ -35,7 +35,7 @@ typedef unsigned int error;
  * @param cap   Capacity of the array.
  */
 void cbb_init(error *err, uintptr *addr, const int *cap);
-void *cbb_init_np(const int cap);
+uint64_t cbb_init_np(int cap);
 
 /**
  * Change capacity of the array.
@@ -47,7 +47,7 @@ void *cbb_init_np(const int cap);
  * @param cap   New capacity if the array. May be less than old capacity.
  */
 void cbb_grow(error *err, uintptr *addr, const int *cap);
-void *cbb_grow_np(void *addr, const int cap);
+uint64_t cbb_grow_np(uint64_t addr, int cap);
 
 /**
  * Release buffer memory.
@@ -56,7 +56,7 @@ void *cbb_grow_np(void *addr, const int cap);
  * @param addr  Address of the array to release. Must become NULL after release.
  */
 void cbb_release(error *err, uintptr *addr);
-void cbb_release_np(void *addr);
+void cbb_release_np(uint64_t addr);
 
 #ifdef __cplusplus
 }

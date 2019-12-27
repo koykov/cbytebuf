@@ -144,7 +144,7 @@ func (b *CByteBuf) Grow(cap int) error {
 	// New array may overlap with the previous if it's possible to resize it (there is free space at the right side).
 	// All necessary copying/free will perform implicitly, don't worry about this.
 	//C.cbb_grow((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
-	b.h.Data = uintptr(C.cbb_grow_np(unsafe.Pointer(b.h.Data), C.int(b.h.Cap)))
+	b.h.Data = uintptr(C.cbb_grow_np(C.ulong(b.h.Data), C.int(b.h.Cap)))
 	if b.h.Data == 0 {
 		return errs[errBadAlloc]
 	}
@@ -182,7 +182,7 @@ func (b *CByteBuf) Reset() {
 func (b *CByteBuf) Release() error {
 	// Free memory.
 	//C.cbb_release((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)))
-	C.cbb_release_np(unsafe.Pointer(b.h.Data))
+	C.cbb_release_np(C.ulong(b.h.Data))
 	// Truncate length and capacity.
 	b.h.Data = 0
 	b.h.Len, b.h.Cap = 0, 0

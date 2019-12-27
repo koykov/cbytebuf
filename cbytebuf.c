@@ -7,9 +7,8 @@ void cbb_init(error *err, uintptr *addr, const int *cap) {
     *err = *addr == NULL ? ERR_BAD_ALLOC : ERR_OK;
 }
 
-void *cbb_init_np(const int cap) {
-    void *addr = (byte*) malloc(cap);
-    return addr;
+uint64_t cbb_init_np(int cap) {
+    return (uint64_t) malloc(cap);
 }
 
 void cbb_grow(error *err, uintptr *addr, const int *cap) {
@@ -17,9 +16,8 @@ void cbb_grow(error *err, uintptr *addr, const int *cap) {
     *err = *addr == NULL ? ERR_BAD_ALLOC : ERR_OK;
 }
 
-void *cbb_grow_np(void *addr, const int cap) {
-    void *addr_n = (byte*) realloc(addr, cap);
-    return addr_n;
+uint64_t cbb_grow_np(uint64_t addr, int cap) {
+    return (uint64_t) realloc((void*)addr, cap);
 }
 
 void cbb_release(error *err, uintptr *addr) {
@@ -30,8 +28,8 @@ void cbb_release(error *err, uintptr *addr) {
     *err = ERR_OK;
 }
 
-void cbb_release_np(void *addr) {
-    if (addr != NULL) {
-        free(addr);
+void cbb_release_np(uint64_t addr) {
+    if ((void*)addr != NULL) {
+        free((void*)addr);
     }
 }
