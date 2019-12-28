@@ -20,6 +20,13 @@ uint64_t cbb_grow_np(uint64_t addr, int cap) {
     return (uint64_t) realloc((void*)addr, cap);
 }
 
+uint64_t cbb_grow_np1(uint64_t addr, int cap_o, int cap_n) {
+    uint64_t addr_n = (uint64_t) malloc(cap_n);
+    memcpy((void*)addr_n, (void*)addr, cap_o);
+    free((void*)addr);
+    return addr_n;
+}
+
 void cbb_release(error *err, uintptr *addr) {
     if (*addr != NULL) {
         free(*addr);

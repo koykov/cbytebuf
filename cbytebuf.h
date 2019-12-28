@@ -48,6 +48,7 @@ uint64_t cbb_init_np(int cap);
  */
 void cbb_grow(error *err, uintptr *addr, const int *cap);
 uint64_t cbb_grow_np(uint64_t addr, int cap);
+uint64_t cbb_grow_np1(uint64_t addr, int cap_o, int cap_n);
 
 /**
  * Release buffer memory.

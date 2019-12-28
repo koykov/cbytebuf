@@ -14,9 +14,10 @@ var (
 		"tincidunt purus. Integer sit amet porta mauris. Curabitur eu est sed augue rutrum tristique et a augue. " +
 		"Proin dictum cursus quam vel varius. Duis viverra massa sed lacus gravida, a ullamcorper ipsum iaculis. " +
 		"Maecenas interdum congue neque, in ultricies erat ornare id. Suspendisse vitae imperdiet eros.")
-	space    = []byte(" ")
-	expected = append(source, space...)
-	parts    = bytes.Split(source, space)
+	space        = []byte(" ")
+	expected     = append(source, space...)
+	expectedLong = bytes.Repeat(source, 1000)
+	parts        = bytes.Split(source, space)
 )
 
 func TestCByteBuf(t *testing.T) {
@@ -38,6 +39,24 @@ func TestCByteBuf(t *testing.T) {
 	}
 }
 
+func TestCByteBufLong(t *testing.T) {
+	buf, err := NewCByteBuf()
+	if err != nil {
+		t.Error(err)
+	}
+	defer func() {
+		_ = buf.Release()
+	}()
+
+	for i := 0; i < 1000; i++ {
+		_, _ = buf.Write(source)
+	}
+	b := buf.Bytes()
+	if !bytes.Equal(b, expectedLong) {
+		t.Error("not equal")
+	}
+}
+
 func BenchmarkCByteBuf(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -47,6 +66,20 @@ func BenchmarkCByteBuf(b *testing.B) {
 			_, _ = buf.Write(space)
 		}
 		if !bytes.Equal(buf.Bytes(), expected) {
+			b.Error("not equal")
+		}
+		_ = buf.Release()
+	}
+}
+
+func BenchmarkCByteBufLong(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf, _ := NewCByteBuf()
+		for i := 0; i < 1000; i++ {
+			_, _ = buf.Write(source)
+		}
+		if !bytes.Equal(buf.Bytes(), expectedLong) {
 			b.Error("not equal")
 		}
 		_ = buf.Release()
@@ -67,6 +100,19 @@ func BenchmarkAppend(b *testing.B) {
 	}
 }
 
+func BenchmarkAppendLong(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf := make([]byte, 0)
+		for i := 0; i < 1000; i++ {
+			buf = append(buf, source...)
+		}
+		if !bytes.Equal(buf, expectedLong) {
+			b.Error("not equal")
+		}
+	}
+}
+
 func BenchmarkByteBufferNative(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -76,6 +122,20 @@ func BenchmarkByteBufferNative(b *testing.B) {
 			buf.WriteByte(' ')
 		}
 		if !bytes.Equal(buf.Bytes(), expected) {
+			b.Error("not equal")
+		}
+		buf.Reset()
+	}
+}
+
+func BenchmarkByteBufferNativeLong(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var buf bytes.Buffer
+		for i := 0; i < 1000; i++ {
+			buf.Write(source)
+		}
+		if !bytes.Equal(buf.Bytes(), expectedLong) {
 			b.Error("not equal")
 		}
 		buf.Reset()
