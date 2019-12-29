@@ -17,9 +17,7 @@ const shortInputThreshold = 256
 // Variable-size alloc-free buffer.
 type CByteBuf struct {
 	h reflect.SliceHeader // header to fast slice construct
-	//b []byte              // buffer slice
-	//l int // actual length
-	t int // temporary int var
+	t int                 // temporary int var
 }
 
 var (
@@ -36,7 +34,6 @@ func NewCByteBuf() *CByteBuf {
 
 // Get length of the buffer.
 func (b *CByteBuf) Len() int {
-	//return b.l
 	return b.h.Len
 }
 
@@ -46,32 +43,32 @@ func (b *CByteBuf) Cap() int {
 }
 
 // Implement io.ReaderFrom.
-//func (b *CByteBuf) ReadFrom(r io.Reader) (n int64, err error) {
-//	if b.h.Cap == 0 {
-//		if err = b.Grow(64); err != nil {
-//			return 0, err
-//		}
-//	}
-//	for {
-//		if b.l == b.h.Cap {
-//			if err = b.Grow(b.h.Cap * 2); err != nil {
-//				return 0, err
-//			}
-//		}
-//		b.t, err = r.Read(b.b[b.l:])
-//		if b.t < 0 {
-//			return n, ErrNegativeRead
-//		}
-//		b.l += b.t
-//		n += int64(b.t)
-//		if err == io.EOF {
-//			return n, nil
-//		}
-//		if err != nil {
-//			return n, err
-//		}
-//	}
-//}
+func (b *CByteBuf) ReadFrom(r io.Reader) (n int64, err error) {
+	if b.h.Cap == 0 {
+		if err = b.Grow(64); err != nil {
+			return 0, err
+		}
+	}
+	for {
+		if b.t == b.h.Cap {
+			if err = b.Grow(b.h.Cap * 2); err != nil {
+				return 0, err
+			}
+		}
+		b.t, err = r.Read(b.Bytes()[b.t:])
+		if b.t < 0 {
+			return n, ErrNegativeRead
+		}
+		b.h.Len += b.t
+		n += int64(b.t)
+		if err == io.EOF {
+			return n, nil
+		}
+		if err != nil {
+			return n, err
+		}
+	}
+}
 
 // Implement io.WriterTo.
 func (b *CByteBuf) WriteTo(w io.Writer) (int64, error) {
@@ -84,22 +81,19 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 	b.t = len(data)
 	if b.h.Data == 0 {
 		// First write, need to create internal byte slice.
-		b.h.Cap = b.t * 2
-		//b.h.Len = b.h.Cap
+		// Check write after reset.
+		if b.h.Cap == 0 {
+			b.h.Cap = b.t * 2
+		}
 		// Create underlying byte array in the C memory, outside of GC's eyes.
-		//C.cbb_init((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
 		b.h.Data = uintptr(C.cbb_init_np(C.int(b.h.Cap)))
 		if b.h.Data == 0 {
 			return 0, ErrBadAlloc
 		}
-		// Manually create the byte slice.
-		//b.b = *(*[]byte)(unsafe.Pointer(&b.h))
 	}
 
-	//if b.l+b.t > b.h.Cap {
 	if b.h.Len+b.t > b.h.Cap {
 		// Increase capacity of the byte array due to not enough space in it.
-		//err := b.Grow((b.l + b.t) * 2)
 		err := b.Grow((b.h.Len + b.t) * 2)
 		if err != nil {
 			return 0, err
@@ -108,6 +102,7 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 
 	// Add data to the slice.
 	if b.t > shortInputThreshold {
+		// Write long data using loop rolling.
 		for len(data) >= 8 {
 			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len))) = data[0]
 			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+1))) = data[1]
@@ -148,7 +143,6 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 		}
 	}
 	// Increase internal len for further grows.
-	//b.l += b.t
 	b.h.Len += b.t
 
 	return b.t, ErrOk
@@ -179,22 +173,23 @@ func (b *CByteBuf) Grow(cap int) error {
 	}
 	// Save new capacity.
 	b.h.Cap = cap
-	//b.h.Len = cap
-	// Reallocate underlying byte array in C memory.
-	// New array may overlap with the previous if it's possible to resize it (there is free space at the right side).
-	// All necessary copying/free will perform implicitly, don't worry about this.
-	//C.cbb_grow((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)), (*C.int)(unsafe.Pointer(&b.h.Cap)))
+	if b.h.Len > b.h.Cap {
+		b.h.Len = b.h.Cap
+	}
 
-	//b.h.Data = uintptr(C.cbb_grow_np(C.ulong(b.h.Data), C.int(b.h.Cap)))
-
-	//b.h.Data = uintptr(C.cbb_grow_np1(C.ulong(b.h.Data), C.int(b.l), C.int(b.h.Cap)))
-	b.h.Data = uintptr(C.cbb_grow_np1(C.ulong(b.h.Data), C.int(b.h.Len), C.int(b.h.Cap)))
-
+	// Allocate memory.
+	if b.h.Data == 0 {
+		// Grow after reset detected.
+		// Allocate underlying byte array in C memory.
+		b.h.Data = uintptr(C.cbb_init_np(C.int(b.h.Cap)))
+	} else {
+		// Reallocate underlying byte array in C memory.
+		// All necessary copying/free will perform implicitly, don't worry about this.
+		b.h.Data = uintptr(C.cbb_grow_np1(C.ulong(b.h.Data), C.int(b.h.Len), C.int(b.h.Cap)))
+	}
 	if b.h.Data == 0 {
 		return ErrBadAlloc
 	}
-	// Recreate the slice (old accumulated data keeps).
-	//b.b = *(*[]byte)(unsafe.Pointer(&b.h))
 	return ErrOk
 }
 
@@ -207,12 +202,7 @@ func (b *CByteBuf) GrowDelta(delta int) error {
 
 // Get the contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
-	//return b.b[:b.l]
 	return *(*[]byte)(unsafe.Pointer(&b.h))
-}
-
-func (b *CByteBuf) H() reflect.SliceHeader {
-	return b.h
 }
 
 // Get the contents of the buffer as string.
@@ -220,24 +210,36 @@ func (b *CByteBuf) String() string {
 	return fastconv.B2S(b.Bytes())
 }
 
+// Reset buffer length without releasing memory.
+func (b *CByteBuf) ResetLen() {
+	b.h.Len = 0
+}
+
 // Reset all data accumulated in buffer.
+//
+// Using the buffer data after call this func may crash your app.
+// Buffer capacity keeps to reduce amount of further CGO calls.
 func (b *CByteBuf) Reset() {
-	//b.l = 0
+	b.release()
 	b.h.Len = 0
 }
 
 // Manually release of the underlying byte array.
 //
 // Using the buffer data after call this func may crash your app.
-func (b *CByteBuf) Release() error {
-	// Free memory.
-	//C.cbb_release((*C.uint)(unsafe.Pointer(&b.e)), (*C.uintptr)(unsafe.Pointer(&b.h.Data)))
+// This method truncates buffer's capacity.
+func (b *CByteBuf) Release() {
+	b.release()
+	b.h.Len = 0
+	b.h.Cap = 0
+}
+
+// Internal release method.
+func (b *CByteBuf) release() {
+	if b.h.Data == 0 {
+		return
+	}
+	// Free memory and reset pointer.
 	C.cbb_release_np(C.ulong(b.h.Data))
-	// Truncate length and capacity.
 	b.h.Data = 0
-	//b.h.Len, b.h.Cap, b.l = 0, 0, 0
-	b.h.Len, b.h.Cap = 0, 0
-	// Slice is broken here, therefore kill it.
-	//b.b = nil
-	return ErrOk
 }

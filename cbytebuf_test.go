@@ -21,12 +21,9 @@ var (
 )
 
 func TestCByteBuf(t *testing.T) {
-	buf, err := NewCByteBuf()
-	if err != nil {
-		t.Error(err)
-	}
+	buf := NewCByteBuf()
 	defer func() {
-		_ = buf.Release()
+		buf.Release()
 	}()
 
 	for _, part := range parts {
@@ -40,12 +37,9 @@ func TestCByteBuf(t *testing.T) {
 }
 
 func TestCByteBufLong(t *testing.T) {
-	buf, err := NewCByteBuf()
-	if err != nil {
-		t.Error(err)
-	}
+	buf := NewCByteBuf()
 	defer func() {
-		_ = buf.Release()
+		buf.Release()
 	}()
 
 	for i := 0; i < 1000; i++ {
@@ -60,7 +54,7 @@ func TestCByteBufLong(t *testing.T) {
 func BenchmarkCByteBuf(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		buf, _ := NewCByteBuf()
+		buf := NewCByteBuf()
 		for _, part := range parts {
 			_, _ = buf.Write(part)
 			_, _ = buf.Write(space)
@@ -68,21 +62,21 @@ func BenchmarkCByteBuf(b *testing.B) {
 		if !bytes.Equal(buf.Bytes(), expected) {
 			b.Error("not equal")
 		}
-		_ = buf.Release()
+		buf.Release()
 	}
 }
 
 func BenchmarkCByteBufLong(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		buf, _ := NewCByteBuf()
+		buf := NewCByteBuf()
 		for i := 0; i < 1000; i++ {
 			_, _ = buf.Write(source)
 		}
 		if !bytes.Equal(buf.Bytes(), expectedLong) {
 			b.Error("not equal")
 		}
-		_ = buf.Release()
+		buf.Release()
 	}
 }
 
