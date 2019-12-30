@@ -24,6 +24,12 @@ type CByteBuf struct {
 	t int
 }
 
+// MarshalerTo interface to write struct like Protobuf.
+type MarshalerTo interface {
+	Size() int
+	MarshalTo(dAtA []byte) (int, error)
+}
+
 var (
 	// Error constants.
 	ErrOk           error = nil
@@ -151,6 +157,16 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 	}
 
 	return b.t, ErrOk
+}
+
+// Marshal data of struct implemented MarshalerTo interface.
+func (b *CByteBuf) WriteMarshalerTo(m MarshalerTo) (int, error) {
+	err := b.Grow(m.Size())
+	if err != nil {
+		return 0, err
+	}
+	b.h.Len = b.h.Cap
+	return m.MarshalTo(b.Bytes())
 }
 
 // Write single byte in the buffer.
