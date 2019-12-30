@@ -2,6 +2,7 @@ package cbytebuf
 
 import (
 	"bytes"
+	"github.com/koykov/fastconv"
 	"testing"
 )
 
@@ -47,6 +48,36 @@ func TestCByteBufLong(t *testing.T) {
 	}
 	b := buf.Bytes()
 	if !bytes.Equal(b, expectedLong) {
+		t.Error("not equal")
+	}
+}
+
+func TestCByteBufAppendBytes(t *testing.T) {
+	buf := NewCByteBuf()
+
+	for _, part := range parts {
+		_, _ = buf.Write(part)
+		_ = buf.WriteByte(' ')
+	}
+	var b []byte
+	b = buf.AppendBytes(b)
+	buf.Release()
+	if !bytes.Equal(b, expected) {
+		t.Error("not equal")
+	}
+}
+
+func TestCByteBufAppendString(t *testing.T) {
+	buf := NewCByteBuf()
+
+	for _, part := range parts {
+		_, _ = buf.Write(part)
+		_ = buf.WriteByte(' ')
+	}
+	var s string
+	s = buf.AppendString(s)
+	buf.Release()
+	if !bytes.Equal(fastconv.S2B(s), expected) {
 		t.Error("not equal")
 	}
 }

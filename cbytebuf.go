@@ -212,9 +212,19 @@ func (b *CByteBuf) Bytes() []byte {
 	return *(*[]byte)(unsafe.Pointer(&b.h))
 }
 
+// Append buffer value to destination and return it.
+func (b *CByteBuf) AppendBytes(dst []byte) []byte {
+	return append(dst[:0], b.Bytes()...)
+}
+
 // Get the contents of the buffer as string.
 func (b *CByteBuf) String() string {
 	return fastconv.B2S(b.Bytes())
+}
+
+// Append buffer value to destination string and return it.
+func (b *CByteBuf) AppendString(dst string) string {
+	return fastconv.B2S(append(fastconv.S2B(dst)[:0], b.Bytes()...))
 }
 
 // Reset buffer length without releasing memory.
