@@ -82,7 +82,7 @@ func TestCByteBufAppendString(t *testing.T) {
 	}
 }
 
-func BenchmarkCByteBuf(b *testing.B) {
+func BenchmarkCByteBuf_Write(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		buf := NewCByteBuf()
@@ -97,7 +97,7 @@ func BenchmarkCByteBuf(b *testing.B) {
 	}
 }
 
-func BenchmarkCByteBufLong(b *testing.B) {
+func BenchmarkCByteBuf_WriteLong(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		buf := NewCByteBuf()
@@ -111,7 +111,7 @@ func BenchmarkCByteBufLong(b *testing.B) {
 	}
 }
 
-func BenchmarkAppend(b *testing.B) {
+func BenchmarkByteSlice_Append(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0)
@@ -125,7 +125,7 @@ func BenchmarkAppend(b *testing.B) {
 	}
 }
 
-func BenchmarkAppendLong(b *testing.B) {
+func BenchmarkByteSlice_AppendLong(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		buf := make([]byte, 0)
@@ -138,7 +138,7 @@ func BenchmarkAppendLong(b *testing.B) {
 	}
 }
 
-func BenchmarkByteBufferNative(b *testing.B) {
+func BenchmarkByteBufferNative_Write(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		var buf bytes.Buffer
@@ -153,7 +153,7 @@ func BenchmarkByteBufferNative(b *testing.B) {
 	}
 }
 
-func BenchmarkByteBufferNativeLong(b *testing.B) {
+func BenchmarkByteBufferNative_WriteLong(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		var buf bytes.Buffer
@@ -164,5 +164,33 @@ func BenchmarkByteBufferNativeLong(b *testing.B) {
 			b.Error("not equal")
 		}
 		buf.Reset()
+	}
+}
+
+func BenchmarkCByteBuf_AppendBytes(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf := NewCByteBuf()
+		_, _ = buf.Write(source)
+		var t []byte
+		t = buf.AppendBytes(t)
+		if !bytes.Equal(t, source) {
+			b.Error("not equal")
+		}
+		buf.Release()
+	}
+}
+
+func BenchmarkCByteBuf_AppendString(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf := NewCByteBuf()
+		_, _ = buf.Write(source)
+		var t string
+		t = buf.AppendString(t)
+		if !bytes.Equal(fastconv.S2B(t), source) {
+			b.Error("not equal")
+		}
+		buf.Release()
 	}
 }

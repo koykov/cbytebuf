@@ -12,8 +12,12 @@ import (
 	"unsafe"
 )
 
-// Limit to switch to loop rolling write.
-const shortInputThreshold = 256
+const (
+	// Limit to switch to loop rolling write.
+	shortInputThreshold = 256
+	// Buffer size limit to use malloc to grow.
+	mallocGrowThreshold = 1024
+)
 
 // Variable-size alloc-free buffer.
 // Also no escapes to the heap since buffer doesn't contain any pointer.
@@ -27,7 +31,7 @@ type CByteBuf struct {
 // MarshalerTo interface to write struct like Protobuf.
 type MarshalerTo interface {
 	Size() int
-	MarshalTo(dAtA []byte) (int, error)
+	MarshalTo(data []byte) (int, error)
 }
 
 var (
@@ -208,7 +212,13 @@ func (b *CByteBuf) Grow(cap int) error {
 	} else {
 		// Reallocate underlying byte array in C memory.
 		// All necessary copying/free will perform implicitly, don't worry about this.
-		b.h.Data = uintptr(C.cbb_grow(C.ulong(b.h.Data), C.int(b.h.Len), C.int(b.h.Cap)))
+		// Using combination of malloc()+memcpy()+free() to grow for short buffers is more efficient than simple using
+		// of realloc().
+		if b.h.Len > mallocGrowThreshold {
+			b.h.Data = uintptr(C.cbb_grow_r(C.ulong(b.h.Data), C.int(b.h.Cap)))
+		} else {
+			b.h.Data = uintptr(C.cbb_grow_m(C.ulong(b.h.Data), C.int(b.h.Len), C.int(b.h.Cap)))
+		}
 	}
 	if b.h.Data == 0 {
 		return ErrBadAlloc
