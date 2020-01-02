@@ -26,6 +26,9 @@ func (p *Pool) Get() *CByteBuf {
 //
 // Using data returned from the buffer after putting is unsafe.
 func (p *Pool) Put(b *CByteBuf) {
+	if b.h.Data == 0 {
+		return
+	}
 	b.Reset()
 	p.p.Put(b)
 }

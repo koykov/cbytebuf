@@ -263,6 +263,7 @@ func (b *CByteBuf) ResetLen() {
 // Using the buffer data after call this func may crash your app.
 // Buffer capacity keeps to reduce amount of further CGO calls.
 func (b *CByteBuf) Reset() {
+	// todo don't release in reset
 	b.release()
 	b.h.Len = 0
 }
