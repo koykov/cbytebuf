@@ -23,9 +23,7 @@ var (
 
 func TestCByteBuf(t *testing.T) {
 	buf := NewCByteBuf()
-	defer func() {
-		buf.Release()
-	}()
+	defer buf.Release()
 
 	for _, part := range parts {
 		_, _ = buf.Write(part)
@@ -39,9 +37,7 @@ func TestCByteBuf(t *testing.T) {
 
 func TestCByteBufLong(t *testing.T) {
 	buf := NewCByteBuf()
-	defer func() {
-		buf.Release()
-	}()
+	defer buf.Release()
 
 	for i := 0; i < 1000; i++ {
 		_, _ = buf.Write(source)

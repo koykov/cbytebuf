@@ -3,23 +3,17 @@ package cbytebuf
 /*
 #include "cbytebuf.h"
 */
-import "C"
+//import "C"
 import (
 	"errors"
+	"github.com/koykov/cbyte"
 	"github.com/koykov/fastconv"
 	"io"
 	"reflect"
 	"unsafe"
 )
 
-const (
-	// Limit to switch to loop rolling write.
-	shortInputThreshold = 256
-	// Buffer size limit to use malloc to grow.
-	mallocGrowThreshold = 1024
-)
-
-// Variable-size alloc-free buffer.
+// Variable-size alloc-free buffer based on cbyte array.
 // Also no escapes to the heap since buffer doesn't contain any pointer.
 type CByteBuf struct {
 	// Header to manipulate buffer size and fast slice construction.
@@ -101,8 +95,8 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 		if b.h.Cap == 0 {
 			b.h.Cap = b.t * 2
 		}
-		// Create underlying byte array in the C memory, outside of GC's eyes.
-		b.h.Data = uintptr(C.cbb_init(C.int(b.h.Cap)))
+		// Allocate byte array.
+		b.h.Data = uintptr(cbyte.Init(b.h.Cap))
 		if b.h.Data == 0 {
 			return 0, ErrBadAlloc
 		}
@@ -116,49 +110,8 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 		}
 	}
 
-	// Add data to the slice.
-	if b.t > shortInputThreshold {
-		// Write long data using loop rolling.
-		for b.t >= 8 {
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len))) = data[0]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+1))) = data[1]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+2))) = data[2]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+3))) = data[3]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+4))) = data[4]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+5))) = data[5]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+6))) = data[6]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+7))) = data[7]
-			b.h.Len += 8
-			b.t -= 8
-			data = data[8:]
-		}
-		for b.t >= 4 {
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len))) = data[0]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+1))) = data[1]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+2))) = data[2]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+3))) = data[3]
-			b.h.Len += 4
-			b.t -= 4
-			data = data[4:]
-		}
-		for b.t >= 2 {
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len))) = data[0]
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+1))) = data[1]
-			b.h.Len += 2
-			b.t -= 2
-			data = data[2:]
-		}
-		if b.t > 0 {
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len))) = data[0]
-			b.h.Len++
-			b.t--
-		}
-	} else {
-		for i := 0; i < b.t; i++ {
-			*(*byte)(unsafe.Pointer(b.h.Data + uintptr(b.h.Len+i))) = data[i]
-		}
-		b.h.Len += b.t
-	}
+	// Append data to the buffer.
+	b.h.Len += cbyte.Memcpy(uint64(b.h.Data), uint64(b.h.Len), data)
 
 	return b.t, ErrOk
 }
@@ -207,18 +160,11 @@ func (b *CByteBuf) Grow(cap int) error {
 	// Allocate memory.
 	if b.h.Data == 0 {
 		// Grow after reset detected.
-		// Allocate underlying byte array in C memory.
-		b.h.Data = uintptr(C.cbb_init(C.int(b.h.Cap)))
+		// Allocate byte array.
+		b.h.Data = uintptr(cbyte.Init(b.h.Cap))
 	} else {
-		// Reallocate underlying byte array in C memory.
-		// All necessary copying/free will perform implicitly, don't worry about this.
-		// Using combination of malloc()+memcpy()+free() to grow for short buffers is more efficient than simple using
-		// of realloc().
-		if b.h.Len > mallocGrowThreshold {
-			b.h.Data = uintptr(C.cbb_grow_r(C.ulong(b.h.Data), C.int(b.h.Cap)))
-		} else {
-			b.h.Data = uintptr(C.cbb_grow_m(C.ulong(b.h.Data), C.int(b.h.Len), C.int(b.h.Cap)))
-		}
+		// Reallocate byte array.
+		b.h.Data = uintptr(cbyte.GrowHeader(b.h))
 	}
 	if b.h.Data == 0 {
 		return ErrBadAlloc
@@ -284,6 +230,6 @@ func (b *CByteBuf) release() {
 		return
 	}
 	// Free memory and reset pointer.
-	C.cbb_release(C.ulong(b.h.Data))
+	cbyte.ReleaseHeader(b.h)
 	b.h.Data = 0
 }
