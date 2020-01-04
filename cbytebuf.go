@@ -206,10 +206,12 @@ func (b *CByteBuf) ResetLen() {
 
 // Reset all data accumulated in buffer.
 //
+// This method made special to use together with pools.
 // Using the buffer data after call this func may crash your app.
 // Buffer capacity keeps to reduce amount of further CGO calls.
 func (b *CByteBuf) Reset() {
-	// todo don't release in reset
+	// sync.Pool may remove items in it without notifications, therefore need to release memory to prevent memory leaks.
+	// If you want to reset buffer length and keep allocated memory and buffer's capacity, then use ResetLen() instead.
 	b.release()
 	b.h.Len = 0
 }
