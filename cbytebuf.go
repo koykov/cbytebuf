@@ -10,7 +10,6 @@ import (
 	"github.com/koykov/fastconv"
 	"io"
 	"reflect"
-	"unsafe"
 )
 
 // Variable-size alloc-free buffer based on cbyte array.
@@ -181,7 +180,7 @@ func (b *CByteBuf) GrowDelta(delta int) error {
 
 // Get the contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
-	return *(*[]byte)(unsafe.Pointer(&b.h))
+	return cbyte.Slice(b.h)
 }
 
 // Append buffer value to destination and return it.
