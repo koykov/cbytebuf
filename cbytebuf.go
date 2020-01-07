@@ -180,7 +180,7 @@ func (b *CByteBuf) GrowDelta(delta int) error {
 
 // Get the contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
-	return cbyte.Slice(b.h)
+	return cbyte.Bytes(b.h)
 }
 
 // Append buffer value to destination and return it.
