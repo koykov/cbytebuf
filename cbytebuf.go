@@ -2,10 +2,11 @@ package cbytebuf
 
 import (
 	"errors"
-	"github.com/koykov/cbyte"
-	"github.com/koykov/fastconv"
 	"io"
 	"reflect"
+
+	"github.com/koykov/cbyte"
+	"github.com/koykov/fastconv"
 )
 
 // Variable-size alloc-free buffer based on cbyte array.

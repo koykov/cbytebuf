@@ -2,8 +2,9 @@ package cbytebuf
 
 import (
 	"bytes"
-	"github.com/koykov/fastconv"
 	"testing"
+
+	"github.com/koykov/fastconv"
 )
 
 var (
