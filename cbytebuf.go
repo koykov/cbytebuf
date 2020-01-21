@@ -1,9 +1,5 @@
 package cbytebuf
 
-/*
-#include "cbytebuf.h"
-*/
-//import "C"
 import (
 	"errors"
 	"github.com/koykov/cbyte"

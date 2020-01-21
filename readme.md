@@ -32,7 +32,7 @@ example/example.go:9:9: inlining call to cbytebuf.NewCByteBuf
 example/example.go:9:9: main &cbytebuf.b·2 does not escape
 ```
 
-See [test file](https://github.com/koykov/cbytebuf/blob/master/cbytebuf_test.go) for more examples and benchmarks for number pf allocations.
+See [test file](https://github.com/koykov/cbytebuf/blob/master/cbytebuf_test.go) for more examples and benchmarks for number of allocations.
 
 ## How it works
 
