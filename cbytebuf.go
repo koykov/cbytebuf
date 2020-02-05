@@ -16,6 +16,8 @@ type CByteBuf struct {
 	h reflect.SliceHeader
 	// Helper temporary variable.
 	t int
+	// Pool id.
+	pid int
 }
 
 // MarshalerTo interface to write struct like Protobuf.
@@ -114,11 +116,12 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 
 // Marshal data of struct implemented MarshalerTo interface.
 func (b *CByteBuf) WriteMarshalerTo(m MarshalerTo) (int, error) {
-	err := b.Grow(m.Size())
+	b.t = m.Size()
+	err := b.Grow(b.t)
 	if err != nil {
 		return 0, err
 	}
-	b.h.Len = b.h.Cap
+	b.h.Len = b.t
 	return m.MarshalTo(b.Bytes())
 }
 
@@ -208,7 +211,7 @@ func (b *CByteBuf) ResetLen() {
 func (b *CByteBuf) Reset() {
 	// sync.Pool may remove items in it without notifications, therefore need to release memory to prevent memory leaks.
 	// If you want to reset buffer length and keep allocated memory and buffer's capacity, then use ResetLen() instead.
-	b.release()
+	// b.release()
 	b.h.Len = 0
 }
 
@@ -230,4 +233,14 @@ func (b *CByteBuf) release() {
 	// Free memory and reset pointer.
 	cbyte.ReleaseHeader(b.h)
 	b.h.Data = 0
+}
+
+// Implement ltpool.PoolerItem.GetPoolId.
+func (b *CByteBuf) GetPoolId() int {
+	return b.pid
+}
+
+// Implement ltpool.PoolerItem.SetPoolId.
+func (b *CByteBuf) SetPoolId(id int) {
+	b.pid = id
 }
