@@ -1,12 +1,10 @@
 package cbytebuf
 
-import (
-	"github.com/koykov/ltpool"
-)
+import "github.com/koykov/lbpool"
 
 // Simple byte buffer pool.
 type Pool struct {
-	p ltpool.Pool
+	p lbpool.Pool
 }
 
 // Default instance of the pool for simple cases.

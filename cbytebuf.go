@@ -234,13 +234,3 @@ func (b *CByteBuf) release() {
 	cbyte.ReleaseHeader(b.h)
 	b.h.Data = 0
 }
-
-// Implement ltpool.PoolerItem.GetPoolId.
-func (b *CByteBuf) GetPoolId() int {
-	return b.pid
-}
-
-// Implement ltpool.PoolerItem.SetPoolId.
-func (b *CByteBuf) SetPoolId(id int) {
-	b.pid = id
-}
