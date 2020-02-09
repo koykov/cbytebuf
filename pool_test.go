@@ -10,11 +10,10 @@ func TestPool(t *testing.T) {
 }
 
 func BenchmarkPool(b *testing.B) {
-	var p Pool
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		b := p.Get()
+		b := P.Get()
 		_, _ = b.WriteString("foobar")
-		p.Put(b)
+		P.Put(b)
 	}
 }
