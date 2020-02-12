@@ -64,6 +64,6 @@ func (p *LBPool) Put(b *CByteBuf) {
 	if b.h.Data == 0 {
 		return
 	}
-	b.Reset()
+	b.ResetLen()
 	p.p.Put(b)
 }
