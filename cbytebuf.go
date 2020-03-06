@@ -176,6 +176,20 @@ func (b *CByteBuf) GrowDelta(delta int) error {
 	return b.Grow(b.h.Cap + delta)
 }
 
+// Increase or decrease length of the buffer.
+//
+// May increase capacity if needed.
+func (b *CByteBuf) GrowLen(len int) error {
+	if b.h.Cap < len {
+		err := b.Grow(len)
+		if err != nil {
+			return err
+		}
+	}
+	b.h.Len = len
+	return nil
+}
+
 // Get the contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
 	return cbyte.Bytes(b.h)
