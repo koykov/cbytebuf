@@ -34,3 +34,13 @@ func (p *Pool) Put(b *CByteBuf) {
 	b.Reset()
 	p.p.Put(b)
 }
+
+// Get byte buffer from default pool instance.
+func Acquire() *CByteBuf {
+	return P.Get()
+}
+
+// Put byte buffer back to default pool instance.
+func Release(b *CByteBuf) {
+	P.Put(b)
+}
