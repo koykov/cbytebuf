@@ -21,6 +21,9 @@ func (p *LBPool) Get() *CByteBuf {
 	v := p.p.Get()
 	if v != nil {
 		if b, ok := v.(*CByteBuf); ok {
+			if poolAckCb != nil {
+				(*poolAckCb)(uint64(b.h.Cap))
+			}
 			return b
 		}
 	}
@@ -33,6 +36,9 @@ func (p *LBPool) Get() *CByteBuf {
 func (p *LBPool) Put(b *CByteBuf) {
 	if b.h.Data == 0 {
 		return
+	}
+	if poolRelCb != nil {
+		(*poolRelCb)(uint64(b.h.Cap))
 	}
 	b.ResetLen()
 	p.p.Put(b)
