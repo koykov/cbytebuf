@@ -16,8 +16,6 @@ type CByteBuf struct {
 	h reflect.SliceHeader
 	// Helper temporary variable.
 	t int
-	// Pool id.
-	pid int
 }
 
 // MarshalerTo interface to write struct like Protobuf.
