@@ -37,11 +37,11 @@ func (p *LBPool) Put(b *CByteBuf) {
 	if b.h.Data == 0 {
 		return
 	}
-	if poolRelCb != nil {
+	b.ResetLen()
+	add := p.p.Put(b)
+	if add && poolRelCb != nil {
 		(*poolRelCb)(uint64(b.h.Cap))
 	}
-	b.ResetLen()
-	p.p.Put(b)
 }
 
 // Get byte buffer from default LB pool instance.
