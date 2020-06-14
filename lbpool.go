@@ -7,13 +7,15 @@ type LBPool struct {
 	p    lbpool.Pool
 }
 
+// Default instance of the LB pool for simple cases.
+// Just call cbytebuf.LBAcquire() and cbytebuf.LBRelease().
 var (
 	LBP = LBPool{Size: 1000}
 
 	_, _ = LBAcquire, LBRelease
 )
 
-// Get old byte buffer from the pool or create a new byte buffer.
+// Get old byte buffer from the LB pool or create a new byte buffer.
 func (p *LBPool) Get() *CByteBuf {
 	p.p.Size = p.Size
 	v := p.p.Get()
@@ -25,7 +27,7 @@ func (p *LBPool) Get() *CByteBuf {
 	return &CByteBuf{}
 }
 
-// Put byte buffer back to the pool.
+// Put byte buffer back to the LB pool.
 //
 // Using data returned from the buffer after putting is unsafe.
 func (p *LBPool) Put(b *CByteBuf) {
