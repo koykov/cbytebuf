@@ -30,6 +30,7 @@ var (
 	ErrBadAlloc           = errors.New("bad alloc on buffer init or grow")
 	ErrNegativeCap        = errors.New("negative cap on the grow")
 	ErrNegativeRead       = errors.New("reader returned negative count from Read")
+	ErrNilMarshaler       = errors.New("marshaler object is nil")
 )
 
 // Shorthand buffer make func.
@@ -114,6 +115,9 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 
 // Marshal data of struct implemented MarshalerTo interface.
 func (b *CByteBuf) WriteMarshalerTo(m MarshalerTo) (int, error) {
+	if m == nil {
+		return 0, ErrNilMarshaler
+	}
 	b.t = m.Size()
 	err := b.Grow(b.t)
 	if err != nil {
