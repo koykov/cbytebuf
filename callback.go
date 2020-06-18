@@ -6,16 +6,16 @@ type PoolReleaseCallbackFn func(cap uint64)
 
 var (
 	// Default instances of callback functions.
-	poolAckCb *PoolAcquireCallbackFn
+	poolAcqCb *PoolAcquireCallbackFn
 	poolRelCb *PoolReleaseCallbackFn
 
 	// Suppress go vet warnings.
-	_, _ = RegisterPoolAckCbFn, RegisterPoolRelCbFn
+	_, _ = RegisterPoolAcqCbFn, RegisterPoolRelCbFn
 )
 
 // Register pool acquire callback.
-func RegisterPoolAckCbFn(fn PoolAcquireCallbackFn) {
-	poolAckCb = &fn
+func RegisterPoolAcqCbFn(fn PoolAcquireCallbackFn) {
+	poolAcqCb = &fn
 }
 
 // Register pool release callback.

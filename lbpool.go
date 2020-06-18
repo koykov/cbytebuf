@@ -7,9 +7,9 @@ type LBPool struct {
 	p    lbpool.Pool
 }
 
-// Default instance of the LB pool for simple cases.
-// Just call cbytebuf.LBAcquire() and cbytebuf.LBRelease().
 var (
+	// Default instance of the LB pool for simple cases.
+	// Just call cbytebuf.LBAcquire() and cbytebuf.LBRelease().
 	LBP = LBPool{Size: 1000}
 
 	_, _ = LBAcquire, LBRelease
@@ -21,8 +21,8 @@ func (p *LBPool) Get() *CByteBuf {
 	v := p.p.Get()
 	if v != nil {
 		if b, ok := v.(*CByteBuf); ok {
-			if poolAckCb != nil {
-				(*poolAckCb)(uint64(b.h.Cap))
+			if poolAcqCb != nil {
+				(*poolAcqCb)(uint64(b.h.Cap))
 			}
 			return b
 		}

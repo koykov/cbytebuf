@@ -11,9 +11,7 @@ type Pool struct {
 
 // Default instance of the pool for simple cases.
 // Just call cbytebuf.Acquire() and cbytebuf.Release().
-var (
-	P Pool
-)
+var P Pool
 
 // Get old byte buffer from the pool or create a new byte buffer.
 func (p *Pool) Get() *CByteBuf {
