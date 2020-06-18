@@ -10,7 +10,7 @@ type Pool struct {
 }
 
 // Default instance of the pool for simple cases.
-// Just call cbytebuf.P.Get() and cbytebuf.P.Put().
+// Just call cbytebuf.Acquire() and cbytebuf.Release().
 var P Pool
 
 // Get old byte buffer from the pool or create a new byte buffer.
