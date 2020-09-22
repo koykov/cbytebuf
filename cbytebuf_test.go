@@ -2,6 +2,7 @@ package cbytebuf
 
 import (
 	"bytes"
+	"math"
 	"testing"
 
 	"github.com/koykov/fastconv"
@@ -77,6 +78,54 @@ func TestCByteBufAppendString(t *testing.T) {
 	if !bytes.Equal(fastconv.S2B(s), expected) {
 		t.Error("not equal")
 	}
+}
+
+func TestCByteBuf_WriteInt(t *testing.T) {
+	buf := NewCByteBuf()
+	_, err := buf.WriteInt(math.MaxInt64)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != "9223372036854775807" {
+		t.Error("not equal")
+	}
+	buf.Release()
+}
+
+func TestCByteBuf_WriteUint(t *testing.T) {
+	buf := NewCByteBuf()
+	_, err := buf.WriteUint(math.MaxUint64)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != "18446744073709551615" {
+		t.Error("not equal")
+	}
+	buf.Release()
+}
+
+func TestCByteBuf_WriteFloat(t *testing.T) {
+	buf := NewCByteBuf()
+	_, err := buf.WriteFloat(math.MaxFloat64, 6)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != "179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000" {
+		t.Error("not equal")
+	}
+	buf.Release()
+}
+
+func TestCByteBuf_WriteBool(t *testing.T) {
+	buf := NewCByteBuf()
+	_, err := buf.WriteBool(false)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != "false" {
+		t.Error("not equal")
+	}
+	buf.Release()
 }
 
 func BenchmarkCByteBuf_Write(b *testing.B) {

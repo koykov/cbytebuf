@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strconv"
 
 	"github.com/koykov/cbyte"
 	"github.com/koykov/fastconv"
@@ -30,6 +31,7 @@ var (
 	ErrBadAlloc           = errors.New("bad alloc on buffer init or grow")
 	ErrNegativeCap        = errors.New("negative cap on the grow")
 	ErrNegativeRead       = errors.New("reader returned negative count from Read")
+	ErrNilMarshaler       = errors.New("marshaler object is nil")
 )
 
 // Shorthand buffer make func.
@@ -114,6 +116,9 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 
 // Marshal data of struct implemented MarshalerTo interface.
 func (b *CByteBuf) WriteMarshalerTo(m MarshalerTo) (int, error) {
+	if m == nil {
+		return 0, ErrNilMarshaler
+	}
 	b.t = m.Size()
 	err := b.Grow(b.t)
 	if err != nil {
@@ -136,6 +141,48 @@ func (b *CByteBuf) WriteByte(c byte) error {
 // String will be convert to byte slice on the fly.
 func (b *CByteBuf) WriteString(s string) (int, error) {
 	return b.Write(fastconv.S2B(s))
+}
+
+// Write integer value in the buffer.
+func (b *CByteBuf) WriteInt(i int64) (int, error) {
+	buf, err := b.subBuf(32)
+	if err != nil {
+		return 0, err
+	}
+	buf = strconv.AppendInt(buf, i, 10)
+	b.h.Len += len(buf)
+	return len(buf), nil
+}
+
+// Write unsigned integer value in the buffer.
+func (b *CByteBuf) WriteUint(u uint64) (int, error) {
+	buf, err := b.subBuf(32)
+	if err != nil {
+		return 0, err
+	}
+	buf = strconv.AppendUint(buf, u, 10)
+	b.h.Len += len(buf)
+	return len(buf), nil
+}
+
+// Write float value in the buffer.
+func (b *CByteBuf) WriteFloat(f float64, prec int) (int, error) {
+	buf, err := b.subBuf(320 + prec)
+	if err != nil {
+		return 0, err
+	}
+	buf = strconv.AppendFloat(buf, f, 'f', prec, 64)
+	b.h.Len += len(buf)
+	return len(buf), nil
+}
+
+// Write boolean value in the buffer.
+func (b *CByteBuf) WriteBool(v bool) (int, error) {
+	if v {
+		return b.WriteString("true")
+	} else {
+		return b.WriteString("false")
+	}
 }
 
 // Increase or decrease capacity of the buffer.
@@ -245,4 +292,17 @@ func (b *CByteBuf) release() {
 	// Free memory and reset pointer.
 	cbyte.ReleaseHeader(b.h)
 	b.h.Data = 0
+}
+
+// Grow buffer and return new space as a sub-buffer.
+func (b *CByteBuf) subBuf(len int) ([]byte, error) {
+	if err := b.Grow(b.h.Len + len); err != nil {
+		return nil, err
+	}
+	bufH := reflect.SliceHeader{
+		Data: b.h.Data + uintptr(b.h.Len),
+		Len:  0,
+		Cap:  len,
+	}
+	return cbyte.Bytes(bufH), nil
 }

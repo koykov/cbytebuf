@@ -52,14 +52,16 @@ We've experienced increasing in more than 2 times the intervals between GC cycle
 ## Benchmarks
 
 ```
-BenchmarkCByteBuf_Write-8                 500000      3430 ns/op       0 B/op       0 allocs/op
-BenchmarkCByteBuf_WriteLong-8               3000    439168 ns/op       0 B/op       0 allocs/op
-BenchmarkByteSlice_Append-8              1000000      1534 ns/op    2040 B/op       8 allocs/op
-BenchmarkByteSlice_AppendLong-8             2000    631983 ns/op 4646289 B/op      25 allocs/op
-BenchmarkByteBufferNative_Write-8         500000      2657 ns/op    2416 B/op       5 allocs/op
-BenchmarkByteBufferNative_WriteLong-8       5000    308436 ns/op 1646724 B/op      10 allocs/op
-BenchmarkByteBufferValyala_Write-8       1000000      1553 ns/op    2040 B/op       8 allocs/op
-BenchmarkByteBufferValyala_WriteLong-8      2000    666237 ns/op 4646282 B/op      25 allocs/op
+BenchmarkCByteBuf_Write-8                   500000        3700 ns/op         0 B/op        0 allocs/op
+BenchmarkCByteBuf_WriteLong-8                 3000      455572 ns/op         0 B/op        0 allocs/op
+BenchmarkByteSlice_Append-8                1000000        1535 ns/op      2040 B/op        8 allocs/op
+BenchmarkByteSlice_AppendLong-8               2000      620068 ns/op   4646290 B/op       25 allocs/op
+BenchmarkByteBufferNative_Write-8           500000        2706 ns/op      2416 B/op        5 allocs/op
+BenchmarkByteBufferNative_WriteLong-8         5000      305353 ns/op   1646723 B/op       10 allocs/op
+BenchmarkCByteBuf_AppendBytes-8            2000000         869 ns/op       896 B/op        1 allocs/op
+BenchmarkCByteBuf_AppendString-8           2000000         917 ns/op       896 B/op        1 allocs/op
+BenchmarkLBPool-8                         20000000         101 ns/op         0 B/op        0 allocs/op
+BenchmarkPool-8                           10000000         207 ns/op         0 B/op        0 allocs/op
 ```
 
 As you can see, CbyteBuf is slowest than any byte buffer or byte slice when writing short pieces of data, but has good speed for long writes.

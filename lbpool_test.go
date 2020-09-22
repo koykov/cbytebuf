@@ -2,18 +2,18 @@ package cbytebuf
 
 import "testing"
 
-func TestPool(t *testing.T) {
-	var p Pool
+func TestLBPool(t *testing.T) {
+	var p = LBPool{Size: 10}
 	b := p.Get()
 	_, _ = b.WriteString("foobar")
 	p.Put(b)
 }
 
-func BenchmarkPool(b *testing.B) {
+func BenchmarkLBPool(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		b := Acquire()
+		b := LBAcquire()
 		_, _ = b.WriteString("foobar")
-		Release(b)
+		LBRelease(b)
 	}
 }
