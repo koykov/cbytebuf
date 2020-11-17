@@ -3,8 +3,10 @@ package cbytebuf
 import "github.com/koykov/lbpool"
 
 type LBPool struct {
-	Size uint
-	p    lbpool.Pool
+	Size          uint
+	ReleaseFactor float32
+
+	p lbpool.Pool
 }
 
 var (
@@ -18,6 +20,7 @@ var (
 // Get old byte buffer from the LB pool or create a new byte buffer.
 func (p *LBPool) Get() *CByteBuf {
 	p.p.Size = p.Size
+	p.p.ReleaseFactor = p.ReleaseFactor
 	v := p.p.Get()
 	if v != nil {
 		if b, ok := v.(*CByteBuf); ok {
