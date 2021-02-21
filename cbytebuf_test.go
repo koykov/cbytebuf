@@ -37,7 +37,7 @@ func TestCByteBuf(t *testing.T) {
 	}
 }
 
-func TestCByteBufLong(t *testing.T) {
+func TestCByteBuf_Long(t *testing.T) {
 	buf := NewCByteBuf()
 	defer buf.Release()
 
@@ -50,7 +50,7 @@ func TestCByteBufLong(t *testing.T) {
 	}
 }
 
-func TestCByteBufAppendBytes(t *testing.T) {
+func TestCByteBuf_AppendBytes(t *testing.T) {
 	buf := NewCByteBuf()
 
 	for _, part := range parts {
@@ -65,7 +65,7 @@ func TestCByteBufAppendBytes(t *testing.T) {
 	}
 }
 
-func TestCByteBufAppendString(t *testing.T) {
+func TestCByteBuf_AppendString(t *testing.T) {
 	buf := NewCByteBuf()
 
 	for _, part := range parts {
@@ -154,62 +154,6 @@ func BenchmarkCByteBuf_WriteLong(b *testing.B) {
 			b.Error("not equal")
 		}
 		buf.Release()
-	}
-}
-
-func BenchmarkByteSlice_Append(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		buf := make([]byte, 0)
-		for _, part := range parts {
-			buf = append(buf, part...)
-			buf = append(buf, ' ')
-		}
-		if !bytes.Equal(buf, expected) {
-			b.Error("not equal")
-		}
-	}
-}
-
-func BenchmarkByteSlice_AppendLong(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		buf := make([]byte, 0)
-		for i := 0; i < 1000; i++ {
-			buf = append(buf, source...)
-		}
-		if !bytes.Equal(buf, expectedLong) {
-			b.Error("not equal")
-		}
-	}
-}
-
-func BenchmarkByteBufferNative_Write(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var buf bytes.Buffer
-		for _, part := range parts {
-			buf.Write(part)
-			buf.WriteByte(' ')
-		}
-		if !bytes.Equal(buf.Bytes(), expected) {
-			b.Error("not equal")
-		}
-		buf.Reset()
-	}
-}
-
-func BenchmarkByteBufferNative_WriteLong(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var buf bytes.Buffer
-		for i := 0; i < 1000; i++ {
-			buf.Write(source)
-		}
-		if !bytes.Equal(buf.Bytes(), expectedLong) {
-			b.Error("not equal")
-		}
-		buf.Reset()
 	}
 }
 
