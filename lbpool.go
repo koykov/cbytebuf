@@ -24,9 +24,7 @@ func (p *LBPool) Get() *CByteBuf {
 	v := p.p.Get()
 	if v != nil {
 		if b, ok := v.(*CByteBuf); ok {
-			if poolAcqCb != nil {
-				(*poolAcqCb)(uint64(b.h.Cap))
-			}
+			metricsHandler.PoolAcquire(uint64(b.h.Cap))
 			return b
 		}
 	}
@@ -42,8 +40,8 @@ func (p *LBPool) Put(b *CByteBuf) {
 	}
 	b.ResetLen()
 	add := p.p.Put(b)
-	if add && poolRelCb != nil {
-		(*poolRelCb)(uint64(b.h.Cap))
+	if add {
+		metricsHandler.PoolRelease(uint64(b.h.Cap))
 	}
 }
 
