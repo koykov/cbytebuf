@@ -1,7 +1,5 @@
 package cbytebuf
 
-// Dummy metrics writer.
-// Used by default and does nothing.
 type MetricsWriter interface {
 	// Register acquire of cbyte object from pool.
 	PoolAcquire(cap uint64)
