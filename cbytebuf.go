@@ -19,19 +19,19 @@ type CByteBuf struct {
 	t int
 }
 
-// MarshalerTo interface to write struct like Protobuf.
-type MarshalerTo interface {
+// MarshallerTo interface to write struct like Protobuf.
+type MarshallerTo interface {
 	Size() int
 	MarshalTo(data []byte) (int, error)
 }
 
 var (
 	// Error constants.
-	ErrOk           error = nil
-	ErrBadAlloc           = errors.New("bad alloc on buffer init or grow")
-	ErrNegativeCap        = errors.New("negative cap on the grow")
-	ErrNegativeRead       = errors.New("reader returned negative count from Read")
-	ErrNilMarshaler       = errors.New("marshaler object is nil")
+	ErrOk            error = nil
+	ErrBadAlloc            = errors.New("bad alloc on buffer init or grow")
+	ErrNegativeCap         = errors.New("negative cap on the grow")
+	ErrNegativeRead        = errors.New("reader returned negative count from Read")
+	ErrNilMarshaller       = errors.New("marshaller object is nil")
 )
 
 // Shorthand buffer make func.
@@ -114,10 +114,10 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 	return b.t, ErrOk
 }
 
-// Marshal data of struct implemented MarshalerTo interface.
-func (b *CByteBuf) WriteMarshalerTo(m MarshalerTo) (int, error) {
+// Marshal data of struct implemented MarshallerTo interface.
+func (b *CByteBuf) WriteMarshallerTo(m MarshallerTo) (int, error) {
 	if m == nil {
-		return 0, ErrNilMarshaler
+		return 0, ErrNilMarshaller
 	}
 	b.t = m.Size()
 	err := b.Grow(b.t)
