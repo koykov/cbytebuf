@@ -159,10 +159,10 @@ func BenchmarkCByteBuf_WriteLong(b *testing.B) {
 
 func BenchmarkCByteBuf_AppendBytes(b *testing.B) {
 	b.ReportAllocs()
+	var t []byte
 	for i := 0; i < b.N; i++ {
 		buf := NewCByteBuf()
 		_, _ = buf.Write(source)
-		var t []byte
 		t = buf.AppendBytes(t)
 		if !bytes.Equal(t, source) {
 			b.Error("not equal")

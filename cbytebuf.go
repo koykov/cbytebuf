@@ -1,7 +1,6 @@
 package cbytebuf
 
 import (
-	"errors"
 	"io"
 	"reflect"
 	"strconv"
@@ -10,8 +9,8 @@ import (
 	"github.com/koykov/fastconv"
 )
 
-// Variable-size alloc-free buffer based on cbyte array.
-// Also no escapes to the heap since buffer doesn't contain any pointer.
+// CByteBuf is a variable-size alloc-free buffer based on cbyte array.
+// Also, no escapes to the heap since buffer doesn't contain any pointer.
 type CByteBuf struct {
 	// Header to manipulate buffer size and fast slice construction.
 	h reflect.SliceHeader
@@ -25,32 +24,23 @@ type MarshallerTo interface {
 	MarshalTo(data []byte) (int, error)
 }
 
-var (
-	// Error constants.
-	ErrOk            error = nil
-	ErrBadAlloc            = errors.New("bad alloc on buffer init or grow")
-	ErrNegativeCap         = errors.New("negative cap on the grow")
-	ErrNegativeRead        = errors.New("reader returned negative count from Read")
-	ErrNilMarshaller       = errors.New("marshaller object is nil")
-)
-
-// Shorthand buffer make func.
+// NewCByteBuf makes new buffer.
 func NewCByteBuf() *CByteBuf {
 	b := CByteBuf{}
 	return &b
 }
 
-// Get length of the buffer.
+// Len returns length of the buffer.
 func (b *CByteBuf) Len() int {
 	return b.h.Len
 }
 
-// Get capacity of the buffer.
+// Cap returns capacity of the buffer.
 func (b *CByteBuf) Cap() int {
 	return b.h.Cap
 }
 
-// Implement io.ReaderFrom.
+// ReadFrom implements io.ReaderFrom.
 func (b *CByteBuf) ReadFrom(r io.Reader) (n int64, err error) {
 	if b.h.Cap == 0 {
 		if err = b.Grow(64); err != nil {
@@ -78,13 +68,13 @@ func (b *CByteBuf) ReadFrom(r io.Reader) (n int64, err error) {
 	}
 }
 
-// Implement io.WriterTo.
+// WriteTo implements io.WriterTo.
 func (b *CByteBuf) WriteTo(w io.Writer) (int64, error) {
 	n, err := w.Write(b.Bytes())
 	return int64(n), err
 }
 
-// Implement io.Writer.
+// Write implements io.Writer.
 func (b *CByteBuf) Write(data []byte) (int, error) {
 	b.t = len(data)
 	if b.h.Data == 0 {
@@ -114,7 +104,7 @@ func (b *CByteBuf) Write(data []byte) (int, error) {
 	return b.t, ErrOk
 }
 
-// Marshal data of struct implemented MarshallerTo interface.
+// WriteMarshallerTo marshals data of struct implemented MarshallerTo interface into the buffer.
 func (b *CByteBuf) WriteMarshallerTo(m MarshallerTo) (int, error) {
 	if m == nil {
 		return 0, ErrNilMarshaller
@@ -128,22 +118,18 @@ func (b *CByteBuf) WriteMarshallerTo(m MarshallerTo) (int, error) {
 	return m.MarshalTo(b.Bytes())
 }
 
-// Write single byte in the buffer.
-//
-// Implement io.ByteWriter.
+// WriteByte implements io.ByteWriter.
 func (b *CByteBuf) WriteByte(c byte) error {
 	_, err := b.Write([]byte{c})
 	return err
 }
 
-// Write string in the buffer.
-//
-// String will be convert to byte slice on the fly.
+// WriteString implements io.StringWriter.
 func (b *CByteBuf) WriteString(s string) (int, error) {
 	return b.Write(fastconv.S2B(s))
 }
 
-// Write integer value in the buffer.
+// WriteInt writes integer value in the buffer.
 func (b *CByteBuf) WriteInt(i int64) (int, error) {
 	buf, err := b.subBuf(32)
 	if err != nil {
@@ -154,7 +140,7 @@ func (b *CByteBuf) WriteInt(i int64) (int, error) {
 	return len(buf), nil
 }
 
-// Write unsigned integer value in the buffer.
+// WriteUint writes unsigned integer value in the buffer.
 func (b *CByteBuf) WriteUint(u uint64) (int, error) {
 	buf, err := b.subBuf(32)
 	if err != nil {
@@ -165,7 +151,7 @@ func (b *CByteBuf) WriteUint(u uint64) (int, error) {
 	return len(buf), nil
 }
 
-// Write float value in the buffer.
+// WriteFloat writes float value in the buffer.
 func (b *CByteBuf) WriteFloat(f float64, prec int) (int, error) {
 	buf, err := b.subBuf(320 + prec)
 	if err != nil {
@@ -176,7 +162,7 @@ func (b *CByteBuf) WriteFloat(f float64, prec int) (int, error) {
 	return len(buf), nil
 }
 
-// Write boolean value in the buffer.
+// WriteBool writes boolean value in the buffer.
 func (b *CByteBuf) WriteBool(v bool) (int, error) {
 	if v {
 		return b.WriteString("true")
@@ -185,7 +171,7 @@ func (b *CByteBuf) WriteBool(v bool) (int, error) {
 	}
 }
 
-// Increase or decrease capacity of the buffer.
+// Grow increases or decrease capacity of the buffer.
 func (b *CByteBuf) Grow(cap int) error {
 	if cap < 0 {
 		return ErrNegativeCap
@@ -216,14 +202,14 @@ func (b *CByteBuf) Grow(cap int) error {
 	return ErrOk
 }
 
-// Increase or decrease capacity of the buffer using delta value.
+// GrowDelta increases or decrease capacity of the buffer using delta value.
 //
 // Delta may be negative, but if delta will less than -capacity, the error will be triggered.
 func (b *CByteBuf) GrowDelta(delta int) error {
 	return b.Grow(b.h.Cap + delta)
 }
 
-// Increase or decrease length of the buffer.
+// GrowLen increases or decrease length of the buffer.
 //
 // May increase capacity if needed.
 func (b *CByteBuf) GrowLen(len int) error {
@@ -237,12 +223,12 @@ func (b *CByteBuf) GrowLen(len int) error {
 	return nil
 }
 
-// Get the contents of the buffer.
+// Bytes returns contents of the buffer.
 func (b *CByteBuf) Bytes() []byte {
 	return cbyte.Bytes(b.h)
 }
 
-// Append buffer value to destination and return it.
+// AppendBytes appends buffer value to destination and return it.
 func (b *CByteBuf) AppendBytes(dst []byte) []byte {
 	return append(dst[:0], b.Bytes()...)
 }
@@ -252,12 +238,12 @@ func (b *CByteBuf) String() string {
 	return fastconv.B2S(b.Bytes())
 }
 
-// Append buffer value to destination string and return it.
+// AppendString appends buffer value to destination string and return it.
 func (b *CByteBuf) AppendString(dst string) string {
 	return fastconv.B2S(append(fastconv.S2B(dst)[:0], b.Bytes()...))
 }
 
-// Reset buffer length without releasing memory.
+// ResetLen resets buffer length without releasing memory.
 func (b *CByteBuf) ResetLen() {
 	b.h.Len = 0
 }
@@ -274,7 +260,7 @@ func (b *CByteBuf) Reset() {
 	b.h.Len = 0
 }
 
-// Manually release of the underlying byte array.
+// Release manually releases of the underlying byte array.
 //
 // Using the buffer data after call this func may crash your app.
 // This method truncates buffer's capacity.

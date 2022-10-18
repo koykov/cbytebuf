@@ -15,10 +15,10 @@ import (
 func main() {
 	buf := cbytebuf.NewCByteBuf()
 	defer buf.Release()
-	buf.WriteString("foo ")
-	buf.WriteString("bar ")
+	_, _ = buf.WriteString("foo ")
+	_, _ = buf.WriteString("bar ")
 	// ...
-	buf.WriteString("end.")
+	_, _ = buf.WriteString("end.")
 	fmt.Println(buf.String()) // "foo bar ... end."
 }
 ```

@@ -1,9 +1,8 @@
 package cbytebuf
 
-// Dummy metrics writer.
+// DummyMetrics writer.
 // Used by default and does nothing.
 type DummyMetrics struct{}
 
-func (m *DummyMetrics) PoolAcquire(cap uint64) {}
-
-func (m *DummyMetrics) PoolRelease(cap uint64) {}
+func (m DummyMetrics) PoolAcquire(_ uint64) {}
+func (m DummyMetrics) PoolRelease(_ uint64) {}

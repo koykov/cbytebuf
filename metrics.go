@@ -1,9 +1,9 @@
 package cbytebuf
 
 type MetricsWriter interface {
-	// Register acquire of cbyte object from pool.
+	// PoolAcquire registers acquire of cbyte object from pool.
 	PoolAcquire(cap uint64)
-	// Register release of cbyte object back to pool.
+	// PoolRelease registers release of cbyte object back to pool.
 	PoolRelease(cap uint64)
 }
 
@@ -15,7 +15,7 @@ var (
 	_ = RegisterMetricsHandler
 )
 
-// Register new metrics handler.
+// RegisterMetricsHandler registers new metrics handler.
 func RegisterMetricsHandler(handler MetricsWriter) {
 	metricsHandler = handler
 }

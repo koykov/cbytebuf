@@ -2,6 +2,7 @@ package cbytebuf
 
 import "github.com/koykov/lbpool"
 
+// LBPool is a pool implementation based on lbpool.Pool.
 type LBPool struct {
 	Size          uint
 	ReleaseFactor float32
@@ -10,7 +11,7 @@ type LBPool struct {
 }
 
 var (
-	// Default instance of the LB pool for simple cases.
+	// LBP is a default instance of LB pool for simple cases.
 	// Just call cbytebuf.LBAcquire() and cbytebuf.LBRelease().
 	LBP = LBPool{Size: 1000}
 
@@ -45,12 +46,12 @@ func (p *LBPool) Put(b *CByteBuf) {
 	}
 }
 
-// Get byte buffer from default LB pool instance.
+// LBAcquire gets byte buffer from default LB pool instance.
 func LBAcquire() *CByteBuf {
 	return LBP.Get()
 }
 
-// Put byte buffer back to default LB pool instance.
+// LBRelease puts byte buffer back to default LB pool instance.
 func LBRelease(b *CByteBuf) {
 	LBP.Put(b)
 }

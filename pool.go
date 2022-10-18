@@ -4,12 +4,12 @@ import (
 	"sync"
 )
 
-// Simple byte buffer pool.
+// Pool is a pool implementation based on sync.Pool.
 type Pool struct {
 	p sync.Pool
 }
 
-// Default instance of the pool for simple cases.
+// P is a default instance of native pool for simple cases.
 // Just call cbytebuf.Acquire() and cbytebuf.Release().
 var P Pool
 
@@ -35,12 +35,12 @@ func (p *Pool) Put(b *CByteBuf) {
 	p.p.Put(b)
 }
 
-// Get byte buffer from default pool instance.
+// Acquire gets byte buffer from default pool instance.
 func Acquire() *CByteBuf {
 	return P.Get()
 }
 
-// Put byte buffer back to default pool instance.
+// Release puts byte buffer back to default pool instance.
 func Release(b *CByteBuf) {
 	P.Put(b)
 }
