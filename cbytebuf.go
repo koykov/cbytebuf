@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/koykov/byteconv"
 	"github.com/koykov/cbyte"
-	"github.com/koykov/fastconv"
 )
 
 // CByteBuf is a variable-size alloc-free buffer based on cbyte array.
@@ -126,7 +126,7 @@ func (b *CByteBuf) WriteByte(c byte) error {
 
 // WriteString implements io.StringWriter.
 func (b *CByteBuf) WriteString(s string) (int, error) {
-	return b.Write(fastconv.S2B(s))
+	return b.Write(byteconv.S2B(s))
 }
 
 // WriteInt writes integer value in the buffer.
@@ -235,12 +235,12 @@ func (b *CByteBuf) AppendBytes(dst []byte) []byte {
 
 // Get the contents of the buffer as string.
 func (b *CByteBuf) String() string {
-	return fastconv.B2S(b.Bytes())
+	return byteconv.B2S(b.Bytes())
 }
 
 // AppendString appends buffer value to destination string and return it.
 func (b *CByteBuf) AppendString(dst string) string {
-	return fastconv.B2S(append(fastconv.S2B(dst)[:0], b.Bytes()...))
+	return byteconv.B2S(append(byteconv.S2B(dst)[:0], b.Bytes()...))
 }
 
 // ResetLen resets buffer length without releasing memory.

@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/koykov/fastconv"
+	"github.com/koykov/byteconv"
 )
 
 var (
@@ -75,7 +75,7 @@ func TestCByteBuf_AppendString(t *testing.T) {
 	var s string
 	s = buf.AppendString(s)
 	buf.Release()
-	if !bytes.Equal(fastconv.S2B(s), expected) {
+	if !bytes.Equal(byteconv.S2B(s), expected) {
 		t.Error("not equal")
 	}
 }
@@ -178,7 +178,7 @@ func BenchmarkCByteBuf_AppendString(b *testing.B) {
 		_, _ = buf.Write(source)
 		var t string
 		t = buf.AppendString(t)
-		if !bytes.Equal(fastconv.S2B(t), source) {
+		if !bytes.Equal(byteconv.S2B(t), source) {
 			b.Error("not equal")
 		}
 		buf.Release()
