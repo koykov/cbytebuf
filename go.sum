@@ -1,6 +1,6 @@
 github.com/koykov/byteconv v1.0.0 h1:C8NThxj3Vcmv7f1h384Ti7F9zjVDnOy9AZj9KxTaYqM=
 github.com/koykov/byteconv v1.0.0/go.mod h1:viZknv/akQJrXOQS3bZu2U7TE+gjA03LFQpSsRExZR4=
-github.com/koykov/cbyte v1.0.4 h1:qPYgfU5y5G97WtXNPEagBCCd4qaUWbvcgbi88zhEisw=
-github.com/koykov/cbyte v1.0.4/go.mod h1:UVUQ41KfBZyJc8igZjupM419KImFPgASqDKLZgj/sxE=
+github.com/koykov/cbyte v1.0.5 h1:2u8ASBnz/nWuGXMofHMVzBgBSNx+30+G3sOxXknp8GI=
+github.com/koykov/cbyte v1.0.5/go.mod h1:UVUQ41KfBZyJc8igZjupM419KImFPgASqDKLZgj/sxE=
 github.com/koykov/lbpool v1.0.2 h1:PdqlS6KzYVdHP2nBl/TIpYLPYpicHLZvPw/d8ooJSQs=
 github.com/koykov/lbpool v1.0.2/go.mod h1:eSNUenMiTmEWrRV7SyYtnXZvCBXtpRSe6A0+vm/q910=
